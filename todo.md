@@ -426,3 +426,9 @@
 - [x] 将当前本地底座2恢复和 3D 图标中心缩放代码同步到 GitHub `pages` 分支。
 - [x] 等待 GitHub Actions 成功完成并确认 Pages 发布提交更新。
 - [x] 验证线上底座2 SVG、底座切换和 3D 图标尺寸缩放功能。
+
+
+## GitHub README 文档
+
+- [x] 根据当前实际功能编写中文项目 README，包含在线地址、功能、使用方式、开发命令和部署说明。
+- [x] 将 README 提交到 GitHub 仓库并验证 GitHub 页面展示内容。
