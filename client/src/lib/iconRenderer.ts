@@ -47,6 +47,8 @@ export type RenderParams = {
   sceneObjectHeight: number;
   sceneMotionHeight: number;
   sceneScale: number;
+  scenePositionX: number;
+  scenePositionY: number;
   sceneBaseDecor: "none" | "base1" | "base2";
   sceneObjectDecor: "none" | "orb" | "cube" | "custom";
   sceneMotionDecor: "none" | "ribbon" | "orbit" | "custom";
@@ -284,6 +286,8 @@ export function renderVariantSvg(asset: IconAsset, style: StyleId, params: Rende
   const duotoneCutouts = cutoutLayer("duotone", 52, 52, 216, 216, duotoneCutout);
   const extrudeCutouts = cutoutLayer("extrude", 52, 52, 216, 216, extrudeCutout);
   const sceneScale = Math.max(0.5, Math.min(1.5, params.sceneScale / 100));
+  const scenePositionX = Math.max(-64, Math.min(64, params.scenePositionX ?? 0));
+  const scenePositionY = Math.max(-64, Math.min(64, params.scenePositionY ?? 0));
   // 场景 SVG 规范画布的中心点为 (160, 196)，缩放围绕该点进行。
   const sceneCenter = { x: 160, y: 196 };
   const sceneOrigin = { x: 78, y: 114, width: 164 };
@@ -296,13 +300,14 @@ export function renderVariantSvg(asset: IconAsset, style: StyleId, params: Rende
   // 主面与等距挤出面的可见整体会沿 sceneOffsetY 扩展；将两者反向平移一半，使整体中心保持在底座的垂直轴线上。
   const sceneVerticalCenterOffset = -sceneOffsetY / 2;
   const sceneVerticalCenterTransform = `translate(${sceneCenter.x} ${sceneCenter.y}) scale(${sceneScale.toFixed(3)}) translate(${-sceneCenter.x} ${-sceneCenter.y}) translate(0 ${sceneVerticalCenterOffset.toFixed(3)})`;
+  const scenePositionTransform = `translate(${scenePositionX.toFixed(2)} ${scenePositionY.toFixed(2)})`;
   const projectedSceneTop = sceneOrigin.y - sceneShear * sceneOrigin.width;
   const projectedSceneBottom = sceneOrigin.y + sceneOrigin.width;
   const scaledSceneBounds = {
-    top: sceneCenter.y + (projectedSceneTop + sceneVerticalCenterOffset + Math.min(0, sceneOffsetY) - sceneCenter.y) * sceneScale,
-    bottom: sceneCenter.y + (projectedSceneBottom + sceneVerticalCenterOffset + Math.max(0, sceneOffsetY) - sceneCenter.y) * sceneScale,
-    left: sceneCenter.x + (sceneOrigin.x + Math.min(0, sceneOffsetX) - sceneCenter.x) * sceneScale,
-    right: sceneCenter.x + (sceneRightEdge + Math.max(0, sceneOffsetX) - sceneCenter.x) * sceneScale,
+    top: sceneCenter.y + (projectedSceneTop + sceneVerticalCenterOffset + Math.min(0, sceneOffsetY) - sceneCenter.y) * sceneScale + scenePositionY,
+    bottom: sceneCenter.y + (projectedSceneBottom + sceneVerticalCenterOffset + Math.max(0, sceneOffsetY) - sceneCenter.y) * sceneScale + scenePositionY,
+    left: sceneCenter.x + (sceneOrigin.x + Math.min(0, sceneOffsetX) - sceneCenter.x) * sceneScale + scenePositionX,
+    right: sceneCenter.x + (sceneRightEdge + Math.max(0, sceneOffsetX) - sceneCenter.x) * sceneScale + scenePositionX,
   };
   const sceneCropPadding = style === "scene" ? Math.max(0, Math.ceil(Math.max(
     -scaledSceneBounds.top + 12,
@@ -424,7 +429,7 @@ export function renderVariantSvg(asset: IconAsset, style: StyleId, params: Rende
   }
   if (style === "scene") {
     const integratedExtrusion = createIntegratedExtrusion(sceneOrigin.x, sceneOrigin.y, sceneOrigin.width, .55, params.sceneExtrusionAngle, `volume-${uid}`, sceneExtrusion, true, sceneSide, sceneBottom, sceneOuterContours);
-    artwork = `${baseVisual}${sceneDecorBehind}<g transform="${sceneVerticalCenterTransform}">${integratedExtrusion}<g filter="url(#scene-glow-${uid})">${projectedSceneCurrent}</g>${projectedSceneHighlight}${projectedSceneCutouts}</g>${sceneDecorFront}`;
+    artwork = `${baseVisual}${sceneDecorBehind}<g transform="${scenePositionTransform}"><g transform="${sceneVerticalCenterTransform}">${integratedExtrusion}<g filter="url(#scene-glow-${uid})">${projectedSceneCurrent}</g>${projectedSceneHighlight}${projectedSceneCutouts}</g></g>${sceneDecorFront}`;
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${crop}" width="${size}" height="${size}" role="img" aria-label="${escapeXml(asset.name)} ${style}" preserveAspectRatio="xMidYMid meet">${defs}${artwork}</svg>`;
 }
