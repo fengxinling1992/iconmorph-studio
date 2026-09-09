@@ -33,7 +33,7 @@ import JSZip from "jszip";
 import { defaultIcons, getExtrusionSafetyInfo, IconAsset, normalizedSvgMarkup, RenderParams, renderVariantSvg, StyleId, styleCatalog } from "@/lib/iconRenderer";
 
 type OutputFormat = "svg" | "png";
-type GradientPreset = { id: string; name: string; start: string; end: string };
+type GradientPreset = { id: string; name: string; start: string; end: string; side: string; bottom: string };
 type LibraryGroup = { id: string; name: string; order: number };
 type LibraryIcon = IconAsset & { groupId: string; code: string };
 type IconLibrary = { groups: LibraryGroup[]; icons: LibraryIcon[] };
@@ -43,12 +43,19 @@ const STORAGE_BASE = `${import.meta.env.BASE_URL}manus-storage/`;
 const ICON_LIBRARY_URL = `${STORAGE_BASE}iconfont-library_e141fca4.json`;
 
 export const GRADIENT_PRESETS: GradientPreset[] = [
-  { id: "blue-purple", name: "蓝紫", start: "#7D2DFF", end: "#41DDFF" },
-  { id: "blue-cyan", name: "蓝青", start: "#64FBD7", end: "#5383FF" },
-  { id: "orange-red", name: "橙红", start: "#FF5D5D", end: "#FFB648" },
-  { id: "yellow-green", name: "黄绿", start: "#53D750", end: "#F0F33C" },
-  { id: "pink-purple", name: "粉紫", start: "#E1ADFA", end: "#FCB4B4" },
+  { id: "blue-purple", name: "蓝紫", start: "#7D2DFF", end: "#41DDFF", side: "#5E22C2", bottom: "#2490B8" },
+  { id: "blue-cyan", name: "蓝青", start: "#64FBD7", end: "#5383FF", side: "#4BC0A5", bottom: "#3B63C2" },
+  { id: "orange-red", name: "橙红", start: "#FF5D5D", end: "#FFB648", side: "#C94747", bottom: "#C78736" },
+  { id: "yellow-green", name: "黄绿", start: "#53D750", end: "#F0F33C", side: "#42A83D", bottom: "#B4B92F" },
+  { id: "pink-purple", name: "粉紫", start: "#E1ADFA", end: "#FCB4B4", side: "#B27FC6", bottom: "#C78989" },
 ];
+
+export function gradientPresetUpdates(preset: GradientPreset, style: StyleId): Partial<RenderParams> {
+  if (style === "glass") return { glassPrimary: preset.start, glassSecondary: preset.end };
+  if (style === "extrude") return { extrudePrimary: preset.start, extrudeSecondary: preset.end, sideColor: preset.side, bottomColor: preset.bottom };
+  if (style === "scene") return { scenePrimary: preset.start, sceneSecondary: preset.end, sceneSideColor: preset.side, sceneBottomColor: preset.bottom };
+  return { primary: preset.start, secondary: preset.end };
+}
 
 const INITIAL_PARAMS: RenderParams = {
   primary: "#A696FC",
@@ -288,14 +295,7 @@ export default function Home() {
   const activeSceneFacePairLabel = `${activeSceneFaces[0]} + ${activeSceneFaces[1]}`;
 
   const updateParam = <K extends keyof RenderParams>(key: K, value: RenderParams[K]) => setParams((current) => ({ ...current, [key]: value }));
-  const applyGradientPreset = (preset: GradientPreset) => {
-    setParams((current) => {
-      if (selectedStyle === "glass") return { ...current, glassPrimary: preset.start, glassSecondary: preset.end };
-      if (selectedStyle === "extrude") return { ...current, extrudePrimary: preset.start, extrudeSecondary: preset.end };
-      if (selectedStyle === "scene") return { ...current, scenePrimary: preset.start, sceneSecondary: preset.end };
-      return { ...current, primary: preset.start, secondary: preset.end };
-    });
-  };
+  const applyGradientPreset = (preset: GradientPreset) => setParams((current) => ({ ...current, ...gradientPresetUpdates(preset, selectedStyle) }));
   const resetActiveStyleParams = () => {
     const resetKeys: Record<StyleId, Array<keyof RenderParams>> = {
       duotone: ["primary", "secondary", "shadowLength", "duotoneCutoutColor"],

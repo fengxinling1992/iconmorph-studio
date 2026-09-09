@@ -1,15 +1,17 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { downloadBlob, GRADIENT_PRESETS } from "./Home";
+import { downloadBlob, gradientPresetUpdates, GRADIENT_PRESETS } from "./Home";
 
 describe("gradient presets", () => {
   it("contains all five requested themes and exact color pairs", () => {
     expect(GRADIENT_PRESETS).toEqual([
-      { id: "blue-purple", name: "蓝紫", start: "#7D2DFF", end: "#41DDFF" },
-      { id: "blue-cyan", name: "蓝青", start: "#64FBD7", end: "#5383FF" },
-      { id: "orange-red", name: "橙红", start: "#FF5D5D", end: "#FFB648" },
-      { id: "yellow-green", name: "黄绿", start: "#53D750", end: "#F0F33C" },
-      { id: "pink-purple", name: "粉紫", start: "#E1ADFA", end: "#FCB4B4" },
+      { id: "blue-purple", name: "蓝紫", start: "#7D2DFF", end: "#41DDFF", side: "#5E22C2", bottom: "#2490B8" },
+      { id: "blue-cyan", name: "蓝青", start: "#64FBD7", end: "#5383FF", side: "#4BC0A5", bottom: "#3B63C2" },
+      { id: "orange-red", name: "橙红", start: "#FF5D5D", end: "#FFB648", side: "#C94747", bottom: "#C78736" },
+      { id: "yellow-green", name: "黄绿", start: "#53D750", end: "#F0F33C", side: "#42A83D", bottom: "#B4B92F" },
+      { id: "pink-purple", name: "粉紫", start: "#E1ADFA", end: "#FCB4B4", side: "#B27FC6", bottom: "#C78989" },
     ]);
+    expect(gradientPresetUpdates(GRADIENT_PRESETS[0], "extrude")).toEqual({ extrudePrimary: "#7D2DFF", extrudeSecondary: "#41DDFF", sideColor: "#5E22C2", bottomColor: "#2490B8" });
+    expect(gradientPresetUpdates(GRADIENT_PRESETS[0], "scene")).toEqual({ scenePrimary: "#7D2DFF", sceneSecondary: "#41DDFF", sceneSideColor: "#5E22C2", sceneBottomColor: "#2490B8" });
   });
 });
 
