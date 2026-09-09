@@ -345,15 +345,17 @@ export function renderVariantSvg(asset: IconAsset, style: StyleId, params: Rende
       const rightEdge = originX + width;
       return { x, y: y + sceneShear * (x - rightEdge) };
     };
-    const contourCenter = { x: originX + width / 2, y: originY + width / 2 };
     const point = (target: ContourPoint) => `${target.x.toFixed(2)} ${target.y.toFixed(2)}`;
-    const faceBucketForSegment = (midpoint: ContourPoint) => {
-      const horizontal = midpoint.x - contourCenter.x;
-      const vertical = midpoint.y - contourCenter.y;
-      if (faces[0] === "right" && faces[1] === "bottom") return horizontal >= vertical ? "primary" : "secondary";
-      if (faces[0] === "bottom" && faces[1] === "left") return vertical >= -horizontal ? "primary" : "secondary";
-      if (faces[0] === "left" && faces[1] === "top") return -horizontal >= -vertical ? "primary" : "secondary";
-      return -vertical >= horizontal ? "primary" : "secondary";
+    const faceDirections: Record<"right" | "bottom" | "left" | "top", ContourPoint> = {
+      right: { x: 1, y: 0 },
+      bottom: { x: 0, y: 1 },
+      left: { x: -1, y: 0 },
+      top: { x: 0, y: -1 },
+    };
+    const faceBucketForNormal = (outwardNormal: ContourPoint) => {
+      const primaryScore = outwardNormal.x * faceDirections[faces[0]].x + outwardNormal.y * faceDirections[faces[0]].y;
+      const secondaryScore = outwardNormal.x * faceDirections[faces[1]].x + outwardNormal.y * faceDirections[faces[1]].y;
+      return primaryScore >= secondaryScore ? "primary" : "secondary";
     };
     const facePaths = { primary: [] as string[], secondary: [] as string[] };
     contours.forEach((contour) => {
@@ -366,7 +368,6 @@ export function renderVariantSvg(asset: IconAsset, style: StyleId, params: Rende
       Array.from({ length: segmentCount }, (_, index) => {
         const from = mapped[index];
         const to = mapped[(index + 1) % mapped.length];
-        const midpoint = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 };
         const extrudedFrom = { x: from.x + offsetX, y: from.y + offsetY };
         const extrudedTo = { x: to.x + offsetX, y: to.y + offsetY };
         const segmentX = to.x - from.x;
@@ -376,7 +377,7 @@ export function renderVariantSvg(asset: IconAsset, style: StyleId, params: Rende
         const facesDirection = outwardNormal.x * offsetX + outwardNormal.y * offsetY;
         const isDiscontinuous = segmentLength > Math.hypot(width, width) * .34;
         if (segmentLength > .02 && facesDirection > .02 && !isDiscontinuous) {
-          facePaths[faceBucketForSegment(midpoint)].push(`M${point(from)}L${point(to)}L${point(extrudedTo)}L${point(extrudedFrom)}Z`);
+          facePaths[faceBucketForNormal(outwardNormal)].push(`M${point(from)}L${point(to)}L${point(extrudedTo)}L${point(extrudedFrom)}Z`);
         }
       });
     });
