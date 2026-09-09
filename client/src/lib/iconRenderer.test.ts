@@ -60,6 +60,8 @@ describe("renderVariantSvg", () => {
   it("keeps the base 2 asset bundled and addressable", () => {
     const svg = renderVariantSvg(defaultIcons()[0], "scene", { ...params, sceneBaseDecor: "base2" });
     expect(svg).toContain("iconmorph-isometric-base.svg");
+    expect(svg).toContain('xmlns:xlink="http://www.w3.org/1999/xlink"');
+    expect(svg).toContain('xlink:href="/manus-storage/iconmorph-isometric-base.svg"');
   });
 
   it("scales the 3D subject around the SVG center point", () => {
@@ -89,5 +91,7 @@ describe("renderVariantSvg", () => {
     });
     expect(svg).toContain("data:image/svg+xml;base64,object");
     expect(svg).toContain("data:image/svg+xml;base64,motion");
+    expect(svg).toContain('xlink:href="data:image/svg+xml;base64,object"');
+    expect(svg).toContain('xlink:href="data:image/svg+xml;base64,motion"');
   });
 });
