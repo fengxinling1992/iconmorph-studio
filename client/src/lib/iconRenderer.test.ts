@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defaultIcons, renderVariantSvg, RenderParams } from "./iconRenderer";
+import { defaultIcons, renderVariantSvg, RenderParams, styleCatalog } from "./iconRenderer";
 
 const params: RenderParams = {
   primary: "#A696FC",
@@ -46,6 +46,14 @@ const params: RenderParams = {
   sceneBaseDecor: "base1",
   sceneObjectDecor: "orb",
   sceneMotionDecor: "ribbon",
+  nebulaPrimary: "#397BEA",
+  nebulaSecondary: "#8ED8E9",
+  nebulaAngle: 135,
+  nebulaShape: "square",
+  nebulaGlassOpacity: 85,
+  nebulaBlur: 10,
+  nebulaShadow: 3,
+  nebulaHighlight: 72,
 };
 
 describe("renderVariantSvg", () => {
@@ -93,5 +101,20 @@ describe("renderVariantSvg", () => {
     expect(svg).toContain("data:image/svg+xml;base64,motion");
     expect(svg).toContain('xlink:href="data:image/svg+xml;base64,object"');
     expect(svg).toContain('xlink:href="data:image/svg+xml;base64,motion"');
+  });
+});
+
+
+describe("nebula frosted glass style", () => {
+  it("adds the sixth style while keeping the original five ids", () => {
+    expect(styleCatalog.map((style) => style.id)).toEqual(["duotone", "gradient", "glass", "extrude", "scene", "nebula"]);
+    const svg = renderVariantSvg(defaultIcons()[0], "nebula", params);
+    expect(svg).toContain("nebula-blur");
+    expect(svg).toContain("nebula-shadow");
+    expect(svg).toContain("#397BEA");
+    expect(svg).toContain("#8ED8E9");
+    expect(svg).toContain("rotate(-15 130 130)");
+    expect(svg).toContain("<rect x=\"49\" y=\"49\" width=\"162\" height=\"162\"");
+    expect(renderVariantSvg(defaultIcons()[0], "nebula", { ...params, nebulaShape: "circle" })).toContain("<circle cx=\"130\" cy=\"130\" r=\"81\"");
   });
 });

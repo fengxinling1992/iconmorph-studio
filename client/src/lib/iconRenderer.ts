@@ -3,7 +3,7 @@
  * 所有源 SVG 均嵌入统一的 100 × 100 规范画布；非 3D 场景模板使用无装饰的纯色背景。
  */
 
-export type StyleId = "duotone" | "gradient" | "glass" | "extrude" | "scene";
+export type StyleId = "duotone" | "gradient" | "glass" | "extrude" | "scene" | "nebula";
 
 export type IconAsset = { id: string; name: string; svg: string };
 
@@ -56,6 +56,14 @@ export type RenderParams = {
   sceneMotionCustom?: string;
   sceneBase?: string;
   sceneDecor?: string;
+  nebulaPrimary: string;
+  nebulaSecondary: string;
+  nebulaAngle: number;
+  nebulaShape: "square" | "circle";
+  nebulaGlassOpacity: number;
+  nebulaBlur: number;
+  nebulaShadow: number;
+  nebulaHighlight: number;
 };
 
 export const styleCatalog: Array<{ id: StyleId; index: string; name: string; short: string; suggestion: string }> = [
@@ -64,6 +72,7 @@ export const styleCatalog: Array<{ id: StyleId; index: string; name: string; sho
   { id: "glass", index: "03", name: "柔和玻璃", short: "微软式磨砂透光与折射高光", suggestion: "复杂效果建议 PNG" },
   { id: "extrude", index: "04", name: "2.5D 轻拟物", short: "30° 等角投影与三档分面明暗", suggestion: "复杂效果建议 PNG" },
   { id: "scene", index: "05", name: "3D 插画场景", short: "等轴底座上的毛玻璃实体", suggestion: "完整质感建议 PNG" },
+  { id: "nebula", index: "06", name: "星云毛玻璃", short: "蓝紫渐变、柔光阴影与半透明玻璃叠层", suggestion: "适合产品图标与浅色界面" },
 ];
 
 const svgStart = /<svg\b([^>]*)>/i;
@@ -216,6 +225,7 @@ export function renderVariantSvg(asset: IconAsset, style: StyleId, params: Rende
   const uid = `${asset.id.replace(/[^a-zA-Z0-9]/g, "")}-${style}`;
   const gradient = gradientAngle(params.angle);
   const sceneGradient = gradientAngle(params.sceneAngle);
+  const nebulaGradient = gradientAngle(params.nebulaAngle);
   const p = escapeXml(params.primary);
   const s = escapeXml(params.secondary);
   const side = escapeXml(params.sideColor);
@@ -274,6 +284,14 @@ export function renderVariantSvg(asset: IconAsset, style: StyleId, params: Rende
   const extrudeGradientCurrent = gradientFrame(52, 52, 216, 216, `whole-${uid}-extrude`, extrudePrimary, extrudeSecondary, extrudeGradient, extrudeCutout);
   const glassGradientCurrent = gradientFrame(52, 52, 216, 216, `whole-${uid}-glass`, glassPrimary, glassSecondary, glassGradient, "#F7F4EE");
   const glassReflection = colorizedFrame(47, 43, 216, 216, "#FFFFFF", "glass-reflection", true);
+  const nebulaGlass = gradientFrame(58, 58, 216, 216, `whole-${uid}-nebula-glass`, params.nebulaPrimary, params.nebulaSecondary, nebulaGradient, "#FFFFFF");
+  const nebulaBaseColor = escapeXml(params.nebulaPrimary);
+  const nebulaBase = params.nebulaShape === "circle"
+    ? `<circle cx="130" cy="130" r="81" fill="${nebulaBaseColor}" transform="rotate(-15 130 130)"/>`
+    : `<rect x="49" y="49" width="162" height="162" rx="24" fill="${nebulaBaseColor}" transform="rotate(-15 130 130)"/>`;
+  const nebulaInner = colorizedFrame(74, 74, 184, 184, "#FFFFFF", "nebula-inner", true);
+  const nebulaEdgeClass = `nebula-edge-${uid}`;
+  const nebulaEdge = `<svg x="58" y="58" width="216" height="216" viewBox="${viewBox}" preserveAspectRatio="xMidYMid meet"><style>.${nebulaEdgeClass} *{fill:none!important;stroke:#FFFFFF!important;stroke-width:1.35!important;stroke-linejoin:round!important}</style><g class="${nebulaEdgeClass}" opacity="${(params.nebulaHighlight / 100).toFixed(2)}">${content}</g></svg>`;
   const glassOutlineClass = `glass-outline-${uid}`;
   const glassOutline = `<svg x="52" y="52" width="216" height="216" viewBox="${viewBox}" preserveAspectRatio="xMidYMid meet"><style>.${glassOutlineClass} *{fill:none!important;stroke:#FFFFFF!important;stroke-width:1.45!important;stroke-linejoin:round!important}</style><g class="${glassOutlineClass}" opacity="${(params.glassHighlight / 150).toFixed(2)}">${content}</g></svg>`;
   const glassTintOpacity = Math.max(0, Math.min(1, params.glassOpacity / 100));
@@ -411,7 +429,7 @@ export function renderVariantSvg(asset: IconAsset, style: StyleId, params: Rende
   const defaultDecorFront = objectDecorFront;
   const sceneDecorBehind = defaultDecorBehind;
   const sceneDecorFront = defaultDecorFront;
-  const defs = `<defs><linearGradient id="glass-stage-${uid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F9FCFF"/><stop offset=".48" stop-color="#DDEEFF"/><stop offset="1" stop-color="#F2EAFF"/></linearGradient><filter id="soft-${uid}" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="${Math.max(0.4, params.blur / 16).toFixed(2)}"/></filter><filter id="lift-${uid}" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="${Math.max(2, extrusion / 3)}" stdDeviation="${Math.max(2, extrusion / 2)}" flood-color="#1F3441" flood-opacity=".18"/></filter><filter id="glow-${uid}" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur in="SourceGraphic" stdDeviation="${Math.max(1, params.blur / 6)}" result="blur"/><feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 .15  0 0 1 0 .12  0 0 0 ${Math.min(.72, params.opacity / 130)} 0"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="glass-frost-${uid}" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur in="SourceGraphic" stdDeviation="${Math.max(.01, params.glassBlur / 16).toFixed(2)}" result="frost"/><feColorMatrix in="frost" type="matrix" values="1 0 0 0 .01  0 1 0 0 .03  0 0 1 0 .08  0 0 0 .34 0" result="bloom"/><feMerge><feMergeNode in="bloom"/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="scene-glow-${uid}" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur in="SourceGraphic" stdDeviation="${Math.max(1, params.sceneBlur / 6)}" result="blur"/><feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 .15  0 0 1 0 .12  0 0 0 .72 0"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
+  const defs = `<defs><linearGradient id="glass-stage-${uid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F9FCFF"/><stop offset=".48" stop-color="#DDEEFF"/><stop offset="1" stop-color="#F2EAFF"/></linearGradient><filter id="soft-${uid}" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="${Math.max(0.4, params.blur / 16).toFixed(2)}"/></filter><filter id="lift-${uid}" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="${Math.max(2, extrusion / 3)}" stdDeviation="${Math.max(2, extrusion / 2)}" flood-color="#1F3441" flood-opacity=".18"/></filter><filter id="glow-${uid}" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur in="SourceGraphic" stdDeviation="${Math.max(1, params.blur / 6)}" result="blur"/><feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 .15  0 0 1 0 .12  0 0 0 ${Math.min(.72, params.opacity / 130)} 0"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="glass-frost-${uid}" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur in="SourceGraphic" stdDeviation="${Math.max(.01, params.glassBlur / 16).toFixed(2)}" result="frost"/><feColorMatrix in="frost" type="matrix" values="1 0 0 0 .01  0 1 0 0 .03  0 0 1 0 .08  0 0 0 .34 0" result="bloom"/><feMerge><feMergeNode in="bloom"/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="scene-glow-${uid}" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur in="SourceGraphic" stdDeviation="${Math.max(1, params.sceneBlur / 6)}" result="blur"/><feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 .15  0 0 1 0 .12  0 0 0 .72 0"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="nebula-shadow-${uid}" x="-55%" y="-55%" width="210%" height="210%"><feGaussianBlur in="SourceGraphic" stdDeviation="${Math.max(1, params.nebulaShadow).toFixed(2)}"/></filter><filter id="nebula-blur-${uid}" x="-45%" y="-45%" width="190%" height="190%"><feGaussianBlur in="SourceGraphic" stdDeviation="${Math.max(0.5, params.nebulaBlur).toFixed(2)}"/></filter></defs>`;
   let artwork = "";
 
   if (style === "duotone") {
@@ -431,6 +449,10 @@ export function renderVariantSvg(asset: IconAsset, style: StyleId, params: Rende
   if (style === "scene") {
     const integratedExtrusion = createIntegratedExtrusion(sceneOrigin.x, sceneOrigin.y, sceneOrigin.width, .55, params.sceneExtrusionAngle, `volume-${uid}`, sceneExtrusion, true, sceneSide, sceneBottom, sceneOuterContours);
     artwork = `${baseVisual}${sceneDecorBehind}<g transform="${scenePositionTransform}"><g transform="${sceneVerticalCenterTransform}">${integratedExtrusion}<g filter="url(#scene-glow-${uid})">${projectedSceneCurrent}</g>${projectedSceneHighlight}${projectedSceneCutouts}</g></g>${sceneDecorFront}`;
+  }
+  if (style === "nebula") {
+    const glassOpacity = Math.max(0.35, Math.min(1, params.nebulaGlassOpacity / 100));
+    artwork = `<rect width="${size}" height="${size}" rx="28" fill="#F5F8FC"/><g opacity=".22" filter="url(#nebula-shadow-${uid})">${nebulaBase}</g><g opacity=".98">${nebulaBase}</g><g opacity="${glassOpacity.toFixed(2)}" filter="url(#nebula-blur-${uid})">${nebulaGlass}</g><g opacity="${glassOpacity.toFixed(2)}">${nebulaGlass}</g><g opacity=".30" filter="url(#soft-${uid})">${nebulaInner}</g>${nebulaEdge}`;
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="${crop}" width="${size}" height="${size}" role="img" aria-label="${escapeXml(asset.name)} ${style}" preserveAspectRatio="xMidYMid meet">${defs}${artwork}</svg>`;
 }
