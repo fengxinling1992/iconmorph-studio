@@ -57,9 +57,9 @@ const params: RenderParams = {
 };
 
 describe("renderVariantSvg", () => {
-  it("uses the independent 2.5D front gradient and unified card background", () => {
+  it("uses the independent 2.5D front gradient on a transparent canvas", () => {
     const svg = renderVariantSvg(defaultIcons()[0], "extrude", params);
-    expect(svg).toContain("#F1F2F6");
+    expect(svg).not.toContain('fill="#F1F2F6"');
     expect(svg).toContain("#1A81FF");
     expect(svg).toContain("#8A58FE");
     expect(svg).toContain("whole-archive-extrude");
@@ -118,14 +118,14 @@ describe("nebula frosted glass style", () => {
     expect(renderVariantSvg(defaultIcons()[0], "nebula", { ...params, nebulaShape: "circle" })).toContain("<circle cx=\"130\" cy=\"130\" r=\"81\"");
   });
 
-  it("removes solid backgrounds only for transparent exports, while keeping 3D scene background", () => {
+  it("keeps every non-scene style transparent and leaves the 3D scene unchanged", () => {
     for (const style of ["duotone", "gradient", "glass", "extrude", "nebula"] as const) {
-      const svg = renderVariantSvg(defaultIcons()[0], style, params, 512, true);
+      const svg = renderVariantSvg(defaultIcons()[0], style, params, 512);
       expect(svg).not.toContain('fill="#F1F2F6"');
       expect(svg).not.toContain('fill="#F5F8FC"');
     }
-    const scenePreview = renderVariantSvg(defaultIcons()[0], "scene", params, 512);
-    expect(renderVariantSvg(defaultIcons()[0], "scene", params, 512, true)).toBe(scenePreview);
-    expect(renderVariantSvg(defaultIcons()[0], "gradient", params)).toContain('fill="#F1F2F6"');
+    const scenePreview = renderVariantSvg(defaultIcons()[0], "scene", { ...params, sceneBaseDecor: "base2" }, 512);
+    expect(scenePreview).toContain("iconmorph-isometric-base.svg");
+    expect(scenePreview).toContain('xlink:href="/manus-storage/iconmorph-isometric-base.svg"');
   });
 });

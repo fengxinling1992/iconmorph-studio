@@ -220,7 +220,7 @@ export function normalizedSvgMarkup(asset: IconAsset, fill = "currentColor") {
   return `<svg viewBox="${STANDARD_VIEWBOX}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"><svg x="0" y="0" width="100" height="100" viewBox="${viewBox}" preserveAspectRatio="xMidYMid meet"><g fill="${fill}">${content}</g></svg></svg>`;
 }
 
-export function renderVariantSvg(asset: IconAsset, style: StyleId, params: RenderParams, size = 320, transparentBackground = false) {
+export function renderVariantSvg(asset: IconAsset, style: StyleId, params: RenderParams, size = 320) {
   const { viewBox, content } = safeSvg(asset.svg);
   const uid = `${asset.id.replace(/[^a-zA-Z0-9]/g, "")}-${style}`;
   const gradient = gradientAngle(params.angle);
@@ -431,21 +431,20 @@ export function renderVariantSvg(asset: IconAsset, style: StyleId, params: Rende
   const sceneDecorFront = defaultDecorFront;
   const defs = `<defs><linearGradient id="glass-stage-${uid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F9FCFF"/><stop offset=".48" stop-color="#DDEEFF"/><stop offset="1" stop-color="#F2EAFF"/></linearGradient><filter id="soft-${uid}" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="${Math.max(0.4, params.blur / 16).toFixed(2)}"/></filter><filter id="lift-${uid}" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="${Math.max(2, extrusion / 3)}" stdDeviation="${Math.max(2, extrusion / 2)}" flood-color="#1F3441" flood-opacity=".18"/></filter><filter id="glow-${uid}" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur in="SourceGraphic" stdDeviation="${Math.max(1, params.blur / 6)}" result="blur"/><feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 .15  0 0 1 0 .12  0 0 0 ${Math.min(.72, params.opacity / 130)} 0"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="glass-frost-${uid}" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur in="SourceGraphic" stdDeviation="${Math.max(.01, params.glassBlur / 16).toFixed(2)}" result="frost"/><feColorMatrix in="frost" type="matrix" values="1 0 0 0 .01  0 1 0 0 .03  0 0 1 0 .08  0 0 0 .34 0" result="bloom"/><feMerge><feMergeNode in="bloom"/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="scene-glow-${uid}" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur in="SourceGraphic" stdDeviation="${Math.max(1, params.sceneBlur / 6)}" result="blur"/><feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 .15  0 0 1 0 .12  0 0 0 .72 0"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="nebula-shadow-${uid}" x="-55%" y="-55%" width="210%" height="210%"><feGaussianBlur in="SourceGraphic" stdDeviation="${Math.max(1, params.nebulaShadow).toFixed(2)}"/></filter><filter id="nebula-blur-${uid}" x="-45%" y="-45%" width="190%" height="190%"><feGaussianBlur in="SourceGraphic" stdDeviation="${Math.max(0.5, params.nebulaBlur).toFixed(2)}"/></filter></defs>`;
   let artwork = "";
-  const previewBackground = transparentBackground ? "" : `<rect width="${size}" height="${size}" rx="28" fill="#F1F2F6"/>`;
 
   if (style === "duotone") {
     const layerDistance = Math.max(4, params.shadowLength * .42);
-    artwork = `${previewBackground}${secondaryOffset(layerDistance)}<g filter="url(#lift-${uid})">${primaryCurrent}</g>${duotoneCutouts}`;
+    artwork = `${secondaryOffset(layerDistance)}<g filter="url(#lift-${uid})">${primaryCurrent}</g>${duotoneCutouts}`;
   }
   if (style === "gradient") {
-    artwork = `${previewBackground}${gradientCurrent}`;
+    artwork = `${gradientCurrent}`;
   }
   if (style === "glass") {
-    artwork = `${previewBackground}${transparentBackground ? "" : `<rect width="${size}" height="${size}" rx="28" fill="url(#glass-stage-${uid})" opacity=".26"/>`}<g opacity=".09" filter="url(#soft-${uid})">${darkOffset}</g><g opacity="${(glassTintOpacity * .88).toFixed(2)}">${glassGradientCurrent}</g><g opacity="${(glassTintOpacity * .34).toFixed(2)}" filter="url(#glass-frost-${uid})">${glassGradientCurrent}</g><g opacity="${glassReflectionOpacity.toFixed(2)}" filter="url(#soft-${uid})">${glassReflection}</g>${glassOutline}`;
+    artwork = `<g opacity=".09" filter="url(#soft-${uid})">${darkOffset}</g><g opacity="${(glassTintOpacity * .88).toFixed(2)}">${glassGradientCurrent}</g><g opacity="${(glassTintOpacity * .34).toFixed(2)}" filter="url(#glass-frost-${uid})">${glassGradientCurrent}</g><g opacity="${glassReflectionOpacity.toFixed(2)}" filter="url(#soft-${uid})">${glassReflection}</g>${glassOutline}`;
   }
   if (style === "extrude") {
     const integratedExtrusion = createIntegratedExtrusion(52, 52, 216, 1, params.extrusionAngle, `volume-${uid}`, extrusion, false, side, bottom, sceneOuterContours);
-    artwork = `${previewBackground}${integratedExtrusion}<g filter="url(#lift-${uid})">${extrudeGradientCurrent}</g>${extrudeCutouts}`;
+    artwork = `${integratedExtrusion}<g filter="url(#lift-${uid})">${extrudeGradientCurrent}</g>${extrudeCutouts}`;
   }
   if (style === "scene") {
     const integratedExtrusion = createIntegratedExtrusion(sceneOrigin.x, sceneOrigin.y, sceneOrigin.width, .55, params.sceneExtrusionAngle, `volume-${uid}`, sceneExtrusion, true, sceneSide, sceneBottom, sceneOuterContours);
@@ -453,7 +452,7 @@ export function renderVariantSvg(asset: IconAsset, style: StyleId, params: Rende
   }
   if (style === "nebula") {
     const glassOpacity = Math.max(0.35, Math.min(1, params.nebulaGlassOpacity / 100));
-    artwork = `${transparentBackground ? "" : `<rect width="${size}" height="${size}" rx="28" fill="#F5F8FC"/>`}<g opacity=".22" filter="url(#nebula-shadow-${uid})">${nebulaBase}</g><g opacity=".98">${nebulaBase}</g><g opacity="${glassOpacity.toFixed(2)}" filter="url(#nebula-blur-${uid})">${nebulaGlass}</g><g opacity="${glassOpacity.toFixed(2)}">${nebulaGlass}</g><g opacity=".30" filter="url(#soft-${uid})">${nebulaInner}</g>${nebulaEdge}`;
+    artwork = `<g opacity=".22" filter="url(#nebula-shadow-${uid})">${nebulaBase}</g><g opacity=".98">${nebulaBase}</g><g opacity="${glassOpacity.toFixed(2)}" filter="url(#nebula-blur-${uid})">${nebulaGlass}</g><g opacity="${glassOpacity.toFixed(2)}">${nebulaGlass}</g><g opacity=".30" filter="url(#soft-${uid})">${nebulaInner}</g>${nebulaEdge}`;
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="${crop}" width="${size}" height="${size}" role="img" aria-label="${escapeXml(asset.name)} ${style}" preserveAspectRatio="xMidYMid meet">${defs}${artwork}</svg>`;
 }
