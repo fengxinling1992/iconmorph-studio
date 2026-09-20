@@ -354,7 +354,7 @@ export default function Home() {
   };
 
   const buildExports = async (asset: IconAsset, style: StyleId) => {
-    const svg = renderVariantSvg(asset, style, params, 512);
+    const svg = renderVariantSvg(asset, style, params, 512, true);
     const exportSvg = await inlineSceneAssets(svg);
     const outputs: Array<{ name: string; blob: Blob }> = [];
     if (formats.includes("svg")) outputs.push({ name: `${slug(asset.name)}-${style}.svg`, blob: new Blob([exportSvg], { type: "image/svg+xml;charset=utf-8" }) });
