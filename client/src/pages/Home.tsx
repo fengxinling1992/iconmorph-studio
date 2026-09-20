@@ -158,6 +158,40 @@ async function inlineSceneAssets(svg: string) {
   return replacements.reduce((result, [url, dataUrl]) => result.split(url).join(dataUrl), svg);
 }
 
+export function makeMasterGoCompatibleSvg(svg: string) {
+  if (typeof DOMParser === "undefined" || typeof XMLSerializer === "undefined") return svg;
+  const document = new DOMParser().parseFromString(svg, "image/svg+xml");
+  if (document.querySelector("parsererror")) return svg;
+  const elements = Array.from(document.querySelectorAll("*"));
+  const styles = Array.from(document.querySelectorAll("style"));
+  const rules: Array<{ selectors: string[]; declarations: Array<[string, string]> }> = [];
+  for (const style of styles) {
+    const css = style.textContent ?? "";
+    const cssRules = css.match(/([^{}]+)\{([^{}]*)\}/g) ?? [];
+    for (const cssRule of cssRules) {
+      const match = /([^{}]+)\{([^{}]*)\}/.exec(cssRule);
+      if (!match) continue;
+      const declarations = match[2].split(";").map((declaration: string) => {
+        const separator = declaration.indexOf(":");
+        if (separator < 0) return null;
+        const property = declaration.slice(0, separator).trim();
+        const value = declaration.slice(separator + 1).replace(/!important/g, "").trim();
+        return property && value ? [property, value] as [string, string] : null;
+      }).filter((item: [string, string] | null): item is [string, string] => Boolean(item));
+      if (declarations.length) rules.push({ selectors: match[1].split(",").map((selector: string) => selector.trim()).filter(Boolean), declarations });
+    }
+  }
+  for (const rule of rules) {
+    for (const element of elements) {
+      if (!rule.selectors.some((selector) => { try { return element.matches(selector); } catch { return false; } })) continue;
+      for (const [property, value] of rule.declarations) element.setAttribute(property, value);
+    }
+  }
+  styles.forEach((style) => style.remove());
+  elements.forEach((element) => element.removeAttribute("class"));
+  return new XMLSerializer().serializeToString(document.documentElement);
+}
+
 async function svgToPng(svg: string, resolution: number) {
   const svgBlob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
   const url = URL.createObjectURL(svgBlob);
@@ -355,7 +389,7 @@ export default function Home() {
 
   const buildExports = async (asset: IconAsset, style: StyleId) => {
     const svg = renderVariantSvg(asset, style, params, 512);
-    const exportSvg = await inlineSceneAssets(svg);
+    const exportSvg = makeMasterGoCompatibleSvg(await inlineSceneAssets(svg));
     const outputs: Array<{ name: string; blob: Blob }> = [];
     if (formats.includes("svg")) outputs.push({ name: `${slug(asset.name)}-${style}.svg`, blob: new Blob([exportSvg], { type: "image/svg+xml;charset=utf-8" }) });
     if (formats.includes("png")) outputs.push({ name: `${slug(asset.name)}-${style}@${resolution}x.png`, blob: await svgToPng(exportSvg, resolution) });
