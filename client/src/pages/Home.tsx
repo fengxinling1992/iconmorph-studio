@@ -162,6 +162,31 @@ export function makeMasterGoCompatibleSvg(svg: string) {
   if (typeof DOMParser === "undefined" || typeof XMLSerializer === "undefined") return svg;
   const document = new DOMParser().parseFromString(svg, "image/svg+xml");
   if (document.querySelector("parsererror")) return svg;
+  const root = document.documentElement;
+  const nestedSvgs = Array.from(document.querySelectorAll("svg"));
+  nestedSvgs.reverse().forEach((nested) => {
+    if (nested.isSameNode(root) || !nested.parentNode) return;
+    const viewBox = (nested.getAttribute("viewBox") ?? "0 0 24 24").trim().split(/[\s,]+/).map(Number);
+    const [minX = 0, minY = 0, viewWidth = 24, viewHeight = 24] = viewBox;
+    const x = Number.parseFloat(nested.getAttribute("x") ?? "0") || 0;
+    const y = Number.parseFloat(nested.getAttribute("y") ?? "0") || 0;
+    const width = Number.parseFloat(nested.getAttribute("width") ?? String(viewWidth)) || viewWidth;
+    const height = Number.parseFloat(nested.getAttribute("height") ?? String(viewHeight)) || viewHeight;
+    const scale = Math.min(width / viewWidth, height / viewHeight);
+    const tx = x + (width - viewWidth * scale) / 2 - minX * scale;
+    const ty = y + (height - viewHeight * scale) / 2 - minY * scale;
+    const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    group.setAttribute("transform", `translate(${tx} ${ty}) scale(${scale})`);
+    while (nested.firstChild) group.appendChild(nested.firstChild);
+    nested.parentNode.replaceChild(group, nested);
+  });
+  const rootDefs = root.querySelector(":scope > defs") ?? document.createElementNS("http://www.w3.org/2000/svg", "defs");
+  if (!rootDefs.parentNode) root.insertBefore(rootDefs, root.firstChild);
+  Array.from(document.querySelectorAll("defs")).forEach((defs) => {
+    if (defs === rootDefs) return;
+    while (defs.firstChild) rootDefs.appendChild(defs.firstChild);
+    defs.remove();
+  });
   const elements = Array.from(document.querySelectorAll("*"));
   const styles = Array.from(document.querySelectorAll("style"));
   const rules: Array<{ selectors: string[]; declarations: Array<[string, string]> }> = [];
