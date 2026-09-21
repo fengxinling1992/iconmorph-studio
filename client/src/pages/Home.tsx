@@ -12,7 +12,6 @@ import {
   ArrowDownToLine,
   Check,
   ChevronDown,
-  CircleHelp,
   Clapperboard,
   Download,
   FileImage,
@@ -301,7 +300,7 @@ export default function Home() {
   const [selectedStyle, setSelectedStyle] = useState<StyleId>("extrude");
   const [params, setParams] = useState<RenderParams>(INITIAL_PARAMS);
   const [selectedVariants, setSelectedVariants] = useState<StyleId[]>(() => styleCatalog.map((style) => style.id));
-  const [formats, setFormats] = useState<OutputFormat[]>(["png"]);
+  const [formats, setFormats] = useState<OutputFormat[]>(["svg"]);
   const [resolution, setResolution] = useState(3);
   const [compareMode, setCompareMode] = useState(false);
   const [isBatch, setIsBatch] = useState(false);
@@ -471,7 +470,6 @@ export default function Home() {
         </div>
         <div className="topbar-middle" aria-hidden="true" />
         <div className="topbar-actions">
-          <button className="help-button" aria-label="使用指南"><CircleHelp size={17} /></button>
           <DialogTrigger asChild><Button className="export-trigger"><ArrowDownToLine size={16} /> 导出结果</Button></DialogTrigger>
           <input ref={assetInput} className="visually-hidden" type="file" accept=".svg,image/svg+xml" multiple onChange={parseAssets} />
         </div>
