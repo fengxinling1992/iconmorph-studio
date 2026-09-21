@@ -84,6 +84,7 @@
 .safety-switch { margin-top: 8px; padding-top: 9px; border-top: 1px solid #E4E8E4; }.safety-switch strong { color: #28575B; }.safety-switch span { max-width: 198px; line-height: 1.45; color: #6E8582; }
 
 /* 3D 插画场景仅使用两组可切换的默认装饰，维持统一底座与紧凑控制节奏。 */
+.scene-kit-options-three { grid-template-columns: repeat(3,minmax(0,1fr)); }
 .scene-geometry-note { margin: -2px 0 9px; color: #718586; font-size: 9px; line-height: 1.55; }.scene-kit-group { display: grid; grid-template-columns: 56px 1fr; align-items: center; gap: 8px; margin: 8px 0; }.scene-kit-group > span { color: #718586; font-size: 9px; }.scene-kit-options { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }.scene-kit-options button { min-height: 27px; border: 1px solid #D8E1DE; background: #FAFCFA; color: #5D7475; font-size: 10px; transition: all .16s cubic-bezier(.23,1,.32,1); }.scene-kit-options button:hover { border-color: #74CDC4; color: #27666A; }.scene-kit-options .scene-kit-active { border-color: #18B9A7; background: #E8FAF6; color: #136D66; box-shadow: inset 0 0 0 1px rgba(24,185,167,.08); }
 
 /* 3D 斜切预设与物件避让：预设保持紧凑，装饰由场景高度逻辑自动移动。 */

@@ -289,7 +289,7 @@ export function renderVariantSvg(asset: IconAsset, style: StyleId, params: Rende
   const nebulaBase = params.nebulaShape === "circle"
     ? `<circle cx="130" cy="130" r="81" fill="${nebulaBaseColor}" transform="rotate(-15 130 130)"/>`
     : params.nebulaShape === "triangle"
-      ? `<path d="M130 43 L218 202 L42 202 Z" fill="${nebulaBaseColor}" transform="rotate(-15 130 130)"/>`
+      ? `<path d="M130 43 C135 43 139 46 142 51 L216 188 C223 201 214 212 200 212 H60 C46 212 37 201 44 188 L118 51 C121 46 125 43 130 43 Z" fill="${nebulaBaseColor}"/>`
       : `<rect x="49" y="49" width="162" height="162" rx="24" fill="${nebulaBaseColor}" transform="rotate(-15 130 130)"/>`;
   const nebulaInner = colorizedFrame(74, 74, 184, 184, "#FFFFFF", "nebula-inner", true);
   const nebulaEdgeClass = `nebula-edge-${uid}`;
