@@ -265,13 +265,13 @@ export function renderVariantSvg(asset: IconAsset, style: StyleId, params: Rende
     const paintClass = `paint-${uid}-${label}`;
     const cutoutRule = hideCutouts
       ? `.${paintClass} [fill="#fff"],.${paintClass} [fill="#ffffff"],.${paintClass} [fill="#FFFFFF"],.${paintClass} [fill="white"],.${paintClass} [fill="#F7F4EE"]{fill:none!important;stroke:none!important}`
-      : `.${paintClass} [fill="#fff"],.${paintClass} [fill="#ffffff"],.${paintClass} [fill="#FFFFFF"],.${paintClass} [fill="white"],.${paintClass} [fill="#F7F4EE"]{fill:#F7F4EE!important}`;
+      : `.${paintClass} [fill="#fff"],.${paintClass} [fill="#ffffff"],.${paintClass} [fill="#FFFFFF"],.${paintClass} [fill="white"],.${paintClass} [fill="#F7F4EE"]{fill:#F7F4EE!important;stroke:none!important}`;
     return `<svg x="${x}" y="${y}" width="${width}" height="${height}" viewBox="${viewBox}" preserveAspectRatio="xMidYMid meet"><style>.${paintClass} *{fill:${color}!important}.${paintClass} [fill="none"]{fill:none!important;stroke:${color}!important}.${paintClass} [stroke]{stroke:${color}!important}${cutoutRule}</style><g class="${paintClass}">${content}</g></svg>`;
   };
   const gradientFrame = (x: number, y: number, width: number, height: number, gradientId: string, start = p, end = s, direction = gradient, cutoutColor?: string) => {
     const paintClass = `gradient-${uid}-${gradientId}`;
     const cutoutRule = cutoutColor
-      ? `.${paintClass} [fill="#fff"],.${paintClass} [fill="#ffffff"],.${paintClass} [fill="#FFFFFF"],.${paintClass} [fill="white"],.${paintClass} [fill="#F7F4EE"]{fill:${cutoutColor}!important}`
+      ? `.${paintClass} [fill="#fff"],.${paintClass} [fill="#ffffff"],.${paintClass} [fill="#FFFFFF"],.${paintClass} [fill="white"],.${paintClass} [fill="#F7F4EE"]{fill:${cutoutColor}!important;stroke:none!important}`
       : `.${paintClass} [fill="#fff"],.${paintClass} [fill="#ffffff"],.${paintClass} [fill="#FFFFFF"],.${paintClass} [fill="white"],.${paintClass} [fill="#F7F4EE"]{fill:none!important;stroke:none!important}`;
     return `<svg x="${x}" y="${y}" width="${width}" height="${height}" viewBox="${viewBox}" preserveAspectRatio="xMidYMid meet"><defs>${wholeGradient(gradientId, start, end, direction)}</defs><style>.${paintClass} *{fill:url(#${gradientId})!important}.${paintClass} [fill="none"]{fill:none!important;stroke:url(#${gradientId})!important}.${paintClass} [stroke]{stroke:url(#${gradientId})!important}${cutoutRule}</style><g class="${paintClass}">${content}</g></svg>`;
   };
@@ -299,7 +299,7 @@ export function renderVariantSvg(asset: IconAsset, style: StyleId, params: Rende
   const cutoutLayer = (label: string, x: number, y: number, width: number, height: number, color: string, transform = "") => {
     const cutoutClass = `${label}-cutout-${uid}`;
     const transformAttribute = transform ? ` transform="${transform}"` : "";
-    return `<g${transformAttribute}><svg x="${x}" y="${y}" width="${width}" height="${height}" viewBox="${viewBox}" preserveAspectRatio="xMidYMid meet"><style>.${cutoutClass} *{fill:none!important;stroke:none!important}.${cutoutClass} [fill="#fff"],.${cutoutClass} [fill="#fff"] *,.${cutoutClass} [fill="#ffffff"],.${cutoutClass} [fill="#ffffff"] *,.${cutoutClass} [fill="#FFFFFF"],.${cutoutClass} [fill="#FFFFFF"] *,.${cutoutClass} [fill="white"],.${cutoutClass} [fill="white"] *,.${cutoutClass} [fill="#F7F4EE"],.${cutoutClass} [fill="#F7F4EE"] *{fill:${color}!important;stroke:${color}!important}</style><g class="${cutoutClass}">${content}</g></svg></g>`;
+    return `<g${transformAttribute}><svg x="${x}" y="${y}" width="${width}" height="${height}" viewBox="${viewBox}" preserveAspectRatio="xMidYMid meet"><style>.${cutoutClass} *{fill:none!important;stroke:none!important}.${cutoutClass} [fill="#fff"],.${cutoutClass} [fill="#fff"] *,.${cutoutClass} [fill="#ffffff"],.${cutoutClass} [fill="#ffffff"] *,.${cutoutClass} [fill="#FFFFFF"],.${cutoutClass} [fill="#FFFFFF"] *,.${cutoutClass} [fill="white"],.${cutoutClass} [fill="white"] *,.${cutoutClass} [fill="#F7F4EE"],.${cutoutClass} [fill="#F7F4EE"] *{fill:${color}!important;stroke:none!important}</style><g class="${cutoutClass}">${content}</g></svg></g>`;
   };
   const duotoneCutouts = cutoutLayer("duotone", 52, 52, 216, 216, duotoneCutout);
   const extrudeCutouts = cutoutLayer("extrude", 52, 52, 216, 216, extrudeCutout);
