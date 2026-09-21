@@ -158,12 +158,63 @@ async function inlineSceneAssets(svg: string) {
   return replacements.reduce((result, [url, dataUrl]) => result.split(url).join(dataUrl), svg);
 }
 
-async function svgToMasterGoCompatibleImage(svg: string) {
-  // Render the original SVG first, then wrap the exact pixels in a minimal SVG.
-  // This avoids relying on MasterGo support for nested SVG, CSS selectors, and filters.
-  const png = await svgToPng(svg, 3);
-  const dataUrl = await blobToDataUrl(png);
-  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" width="512" height="512" preserveAspectRatio="xMidYMid meet"><image href="${dataUrl}" xlink:href="${dataUrl}" x="0" y="0" width="512" height="512" preserveAspectRatio="none"/></svg>`;
+export function makeMasterGoCompatibleSvg(svg: string) {
+  if (typeof DOMParser === "undefined" || typeof XMLSerializer === "undefined") return svg;
+  const document = new DOMParser().parseFromString(svg, "image/svg+xml");
+  if (document.querySelector("parsererror")) return svg;
+  const root = document.documentElement;
+  const nestedSvgs = Array.from(document.querySelectorAll("svg"));
+  nestedSvgs.reverse().forEach((nested) => {
+    if (nested.isSameNode(root) || !nested.parentNode) return;
+    const viewBox = (nested.getAttribute("viewBox") ?? "0 0 24 24").trim().split(/[\s,]+/).map(Number);
+    const [minX = 0, minY = 0, viewWidth = 24, viewHeight = 24] = viewBox;
+    const x = Number.parseFloat(nested.getAttribute("x") ?? "0") || 0;
+    const y = Number.parseFloat(nested.getAttribute("y") ?? "0") || 0;
+    const width = Number.parseFloat(nested.getAttribute("width") ?? String(viewWidth)) || viewWidth;
+    const height = Number.parseFloat(nested.getAttribute("height") ?? String(viewHeight)) || viewHeight;
+    const scale = Math.min(width / viewWidth, height / viewHeight);
+    const tx = x + (width - viewWidth * scale) / 2 - minX * scale;
+    const ty = y + (height - viewHeight * scale) / 2 - minY * scale;
+    const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    group.setAttribute("transform", `translate(${tx} ${ty}) scale(${scale})`);
+    while (nested.firstChild) group.appendChild(nested.firstChild);
+    nested.parentNode.replaceChild(group, nested);
+  });
+  const rootDefs = root.querySelector(":scope > defs") ?? document.createElementNS("http://www.w3.org/2000/svg", "defs");
+  if (!rootDefs.parentNode) root.insertBefore(rootDefs, root.firstChild);
+  Array.from(document.querySelectorAll("defs")).forEach((defs) => {
+    if (defs === rootDefs) return;
+    while (defs.firstChild) rootDefs.appendChild(defs.firstChild);
+    defs.remove();
+  });
+  const elements = Array.from(document.querySelectorAll("*"));
+  const styles = Array.from(document.querySelectorAll("style"));
+  const rules: Array<{ selectors: string[]; declarations: Array<[string, string]> }> = [];
+  for (const style of styles) {
+    const css = style.textContent ?? "";
+    const cssRules = css.match(/([^{}]+)\{([^{}]*)\}/g) ?? [];
+    for (const cssRule of cssRules) {
+      const match = /([^{}]+)\{([^{}]*)\}/.exec(cssRule);
+      if (!match) continue;
+      const declarations = match[2].split(";").map((declaration: string) => {
+        const separator = declaration.indexOf(":");
+        if (separator < 0) return null;
+        const property = declaration.slice(0, separator).trim();
+        const value = declaration.slice(separator + 1).replace(/!important/g, "").trim();
+        return property && value ? [property, value] as [string, string] : null;
+      }).filter((item: [string, string] | null): item is [string, string] => Boolean(item));
+      if (declarations.length) rules.push({ selectors: match[1].split(",").map((selector: string) => selector.trim()).filter(Boolean), declarations });
+    }
+  }
+  for (const rule of rules) {
+    for (const element of elements) {
+      if (!rule.selectors.some((selector) => { try { return element.matches(selector); } catch { return false; } })) continue;
+      for (const [property, value] of rule.declarations) element.setAttribute(property, value);
+    }
+  }
+  styles.forEach((style) => style.remove());
+  elements.forEach((element) => element.removeAttribute("class"));
+  return new XMLSerializer().serializeToString(document.documentElement);
 }
 
 async function svgToPng(svg: string, resolution: number) {
@@ -362,13 +413,11 @@ export default function Home() {
   };
 
   const buildExports = async (asset: IconAsset, style: StyleId) => {
-    const svg = renderVariantSvg(asset, style, params, 512);
+    const svg = renderVariantSvg(asset, style, params, 320);
     const sourceSvg = await inlineSceneAssets(svg);
+    const exportSvg = makeMasterGoCompatibleSvg(sourceSvg);
     const outputs: Array<{ name: string; blob: Blob }> = [];
-    if (formats.includes("svg")) {
-      const exportSvg = await svgToMasterGoCompatibleImage(sourceSvg);
-      outputs.push({ name: `${slug(asset.name)}-${style}.svg`, blob: new Blob([exportSvg], { type: "image/svg+xml;charset=utf-8" }) });
-    }
+    if (formats.includes("svg")) outputs.push({ name: `${slug(asset.name)}-${style}.svg`, blob: new Blob([exportSvg], { type: "image/svg+xml;charset=utf-8" }) });
     if (formats.includes("png")) outputs.push({ name: `${slug(asset.name)}-${style}@${resolution}x.png`, blob: await svgToPng(sourceSvg, resolution) });
     return outputs;
   };
