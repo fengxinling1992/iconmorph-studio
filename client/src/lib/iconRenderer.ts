@@ -59,7 +59,7 @@ export type RenderParams = {
   nebulaPrimary: string;
   nebulaSecondary: string;
   nebulaAngle: number;
-  nebulaShape: "square" | "circle";
+  nebulaShape: "square" | "circle" | "triangle";
   nebulaGlassOpacity: number;
   nebulaBlur: number;
   nebulaShadow: number;
@@ -288,7 +288,9 @@ export function renderVariantSvg(asset: IconAsset, style: StyleId, params: Rende
   const nebulaBaseColor = escapeXml(params.nebulaPrimary);
   const nebulaBase = params.nebulaShape === "circle"
     ? `<circle cx="130" cy="130" r="81" fill="${nebulaBaseColor}" transform="rotate(-15 130 130)"/>`
-    : `<rect x="49" y="49" width="162" height="162" rx="24" fill="${nebulaBaseColor}" transform="rotate(-15 130 130)"/>`;
+    : params.nebulaShape === "triangle"
+      ? `<path d="M130 43 L218 202 L42 202 Z" fill="${nebulaBaseColor}" transform="rotate(-15 130 130)"/>`
+      : `<rect x="49" y="49" width="162" height="162" rx="24" fill="${nebulaBaseColor}" transform="rotate(-15 130 130)"/>`;
   const nebulaInner = colorizedFrame(74, 74, 184, 184, "#FFFFFF", "nebula-inner", true);
   const nebulaEdgeClass = `nebula-edge-${uid}`;
   const nebulaEdge = `<svg x="58" y="58" width="216" height="216" viewBox="${viewBox}" preserveAspectRatio="xMidYMid meet"><style>.${nebulaEdgeClass} *{fill:none!important;stroke:#FFFFFF!important;stroke-width:1.35!important;stroke-linejoin:round!important}.${nebulaEdgeClass} [fill="#fff"],.${nebulaEdgeClass} [fill="#ffffff"],.${nebulaEdgeClass} [fill="#FFFFFF"],.${nebulaEdgeClass} [fill="white"],.${nebulaEdgeClass} [fill="#F7F4EE"]{fill:#FFFFFF!important;stroke:none!important}</style><g class="${nebulaEdgeClass}" opacity="${(params.nebulaHighlight / 100).toFixed(2)}">${content}</g></svg>`;
